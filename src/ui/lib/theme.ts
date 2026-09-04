@@ -18,6 +18,8 @@ export const palette = {
     mutedForeground: '#60646c',
     secondary: '#e0e1e6',
     secondaryForeground: '#000000',
+    accent: '#7c3aed',
+    accentForeground: '#ffffff',
     border: '#e0e1e6',
     input: '#e0e1e6',
     ring: '#208aef',
@@ -39,6 +41,8 @@ export const palette = {
     mutedForeground: '#b0b4ba',
     secondary: '#2e3135',
     secondaryForeground: '#ffffff',
+    accent: '#8b5cf6',
+    accentForeground: '#ffffff',
     border: '#2e3135',
     input: '#2e3135',
     ring: '#3c87f7',
@@ -54,6 +58,25 @@ export const palette = {
 } as const;
 
 export type ThemeColors = { [K in keyof (typeof palette)['light']]: string };
+
+/**
+ * Concrete gradient stop-pairs for `expo-linear-gradient`, which needs real
+ * color arrays rather than utility classes. Vivid and theme-independent by
+ * design — a gradient here communicates energy/state, so it stays saturated in
+ * both light and dark. Consumed by `GradientButton`, `ProgressIndicator`, etc.
+ */
+export const gradients = {
+  /** Signature: blue → violet. */
+  primary: ['#208aef', '#7c3aed'],
+  /** Playful: violet → pink. */
+  accent: ['#8b5cf6', '#ec4899'],
+  /** Positive: emerald → cyan. */
+  success: ['#10b981', '#22d3ee'],
+  /** Energetic/alert: rose → amber. */
+  danger: ['#f43f5e', '#f59e0b'],
+} as const;
+
+export type GradientName = keyof typeof gradients;
 
 /** Concrete colors for the active color scheme. */
 export function useThemeColors(): ThemeColors {

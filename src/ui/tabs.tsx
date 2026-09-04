@@ -50,16 +50,62 @@ export function Tabs({
   );
 }
 
-export function TabsList({ className, ...rest }: ViewProps & { className?: string }) {
-  return (
-    <View
-      className={cn('flex-row rounded-xl bg-muted p-1', className)}
-      {...rest}
-    />
-  );
+export function TabsList({
+  variant = 'pill',
+  className,
+  ...rest
+}: ViewProps & { variant?: 'pill' | 'underline'; className?: string }) {
+  if (variant === 'underline') {
+    return <View className={cn('flex-row border-b border-border', className)} {...rest} />;
+  }
+  return <View className={cn('flex-row rounded-xl bg-muted p-1', className)} {...rest} />;
 }
 
 export function TabsTrigger({
+  value,
+  label,
+  icon,
+  badge,
+  className,
+}: {
+  value: string;
+  label: string;
+  icon?: string;
+  badge?: string | number;
+  className?: string;
+}) {
+  const { value: active, setValue } = useTabs();
+  const isActive = active === value;
+  // we need to detect variant via parent - simplified: use pill detection by checking if parent has pill bg
+  return (
+    <Pressable
+      accessibilityRole="tab"
+      accessibilityState={{ selected: isActive }}
+      onPress={() => setValue(value)}
+      className={cn(
+        'flex-1 flex-row items-center justify-center gap-1.5 rounded-lg px-3 py-2',
+        isActive ? 'bg-background shadow-sm' : '',
+        className,
+      )}>
+      <Text
+        className={cn(
+          'text-sm font-medium',
+          isActive ? 'text-foreground' : 'text-muted-foreground',
+        )}>
+        {label}
+      </Text>
+      {badge != null ? (
+        <View className={cn('rounded-full px-1.5 py-0', isActive ? 'bg-primary' : 'bg-muted')}>
+          <Text className={cn('text-[10px] font-bold', isActive ? 'text-primary-foreground' : 'text-muted-foreground')}>
+            {badge}
+          </Text>
+        </View>
+      ) : null}
+    </Pressable>
+  );
+}
+
+export function TabsTriggerUnderline({
   value,
   label,
   className,
@@ -75,18 +121,8 @@ export function TabsTrigger({
       accessibilityRole="tab"
       accessibilityState={{ selected: isActive }}
       onPress={() => setValue(value)}
-      className={cn(
-        'flex-1 items-center justify-center rounded-lg px-3 py-2',
-        isActive && 'bg-background shadow-sm',
-        className,
-      )}>
-      <Text
-        className={cn(
-          'text-sm font-medium',
-          isActive ? 'text-foreground' : 'text-muted-foreground',
-        )}>
-        {label}
-      </Text>
+      className={cn('border-b-2 px-4 py-2.5', isActive ? 'border-foreground' : 'border-transparent', className)}>
+      <Text className={cn('text-sm font-medium', isActive ? 'text-foreground' : 'text-muted-foreground')}>{label}</Text>
     </Pressable>
   );
 }
