@@ -3,6 +3,12 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
+      "@/ui": [
+        "./library/src"
+      ],
+      "@/ui/*": [
+        "./library/src/*"
+      ],
       "@/*": [
         "./src/*"
       ],
