@@ -63,7 +63,7 @@ export type ThemeColors = { [K in keyof (typeof palette)['light']]: string };
  * Concrete gradient stop-pairs for `expo-linear-gradient`, which needs real
  * color arrays rather than utility classes. Vivid and theme-independent by
  * design — a gradient here communicates energy/state, so it stays saturated in
- * both light and dark. Consumed by `GradientButton`, `ProgressIndicator`, etc.
+ * both light and dark. Consumed by `Progress` and themed surfaces, etc.
  */
 export const gradients = {
   /** Signature: blue → violet. */

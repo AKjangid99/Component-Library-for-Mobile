@@ -1,6 +1,7 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import { Text, View, type ViewProps } from 'react-native';
+import { X } from 'lucide-react-native';
+import { Pressable, Text, View, type ViewProps } from 'react-native';
 
 import { cn } from '@/ui/lib/cn';
 import { useThemeColors } from '@/ui/lib/theme';
@@ -58,6 +59,26 @@ export type BadgeProps = ViewProps &
     icon?: SymbolViewProps['name'];
     dot?: boolean;
     dotColor?: string;
+    /**
+     * Custom accent color (any hex). Filled variants take it as background;
+     * `outline` keeps a transparent fill and uses it for border + text.
+     * Pair with `textColor`, or leave it — text falls back to white.
+     * Tip: pass `useAccent()` / `resolvedAccent` for a live-themed badge.
+     */
+    color?: string;
+    /** Custom label/icon color. Defaults adapt to `color` + `variant`. */
+    textColor?: string;
+    style?: ViewProps['style'];
+    /** Chip mode: shows an inline close button and calls `onRemove`. */
+    removable?: boolean;
+    onRemove?: () => void;
+    /**
+     * Counter mode: renders a compact numeric badge (for notification
+     * counts). Values above `max` render as `{max}+`. Takes precedence
+     * over `label`.
+     */
+    count?: number;
+    max?: number;
   };
 
 export function Badge({
@@ -71,11 +92,19 @@ export function Badge({
   icon,
   dot,
   dotColor,
+  color,
+  textColor,
+  style,
+  removable,
+  onRemove,
+  count,
+  max = 99,
   ...rest
 }: BadgeProps) {
   const colors = useThemeColors();
-  const iconTint =
-    variant === 'outline' || variant === 'muted'
+  const isOutline = variant === 'outline';
+  const fallbackTint =
+    isOutline || variant === 'muted'
       ? colors.foreground
       : variant === 'secondary'
         ? colors.secondaryForeground
@@ -86,9 +115,26 @@ export function Badge({
             : variant === 'warning'
               ? colors.warningForeground
               : colors.primaryForeground;
+  // Custom color: tinted text for outline, white text otherwise unless overridden.
+  const iconTint =
+    textColor ?? (color ? (isOutline ? color : '#ffffff') : fallbackTint);
+
+  // Counter mode wins over `label`.
+  const displayLabel = count != null ? (count > max ? `${max}+` : String(count)) : label;
 
   return (
-    <View className={cn(badge({ variant, size, shape }), className)} {...rest}>
+    <View
+      accessibilityLabel={count != null ? `${count} notifications` : undefined}
+      className={cn(badge({ variant, size, shape }), count != null && 'justify-center', className)}
+      style={[
+        color
+          ? isOutline
+            ? { borderColor: color }
+            : { backgroundColor: color, borderColor: color }
+          : null,
+        style,
+      ]}
+      {...rest}>
       {dot ? (
         <View
           className="h-1.5 w-1.5 rounded-full"
@@ -96,7 +142,23 @@ export function Badge({
         />
       ) : null}
       {icon ? <SymbolView name={icon} size={size === 'sm' ? 11 : size === 'lg' ? 15 : 13} tintColor={iconTint} /> : null}
-      {children ?? <Text className={cn(badgeText({ variant, size }), textClassName)}>{label}</Text>}
+      {children ?? (
+        <Text
+          className={cn(badgeText({ variant, size }), count != null && 'tabular-nums', textClassName)}
+          style={color || textColor ? { color: iconTint } : undefined}>
+          {displayLabel}
+        </Text>
+      )}
+      {removable ? (
+        <Pressable
+          onPress={onRemove}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel={displayLabel ? `Remove ${displayLabel}` : 'Remove'}
+          className="-mr-1 rounded-full p-0.5">
+          <X size={size === 'sm' ? 11 : size === 'lg' ? 15 : 13} color={iconTint} strokeWidth={2.5} />
+        </Pressable>
+      ) : null}
     </View>
   );
 }

@@ -84,20 +84,32 @@ export function GlassCard({
   }
 
   return (
-    <View className={cn('overflow-hidden rounded-3xl border border-white/25', className)} {...rest}>
+    <View
+      className={cn('border border-white/25', className)}
+      // Single source of truth for the corner radius, applied inline: the
+      // BlurView + tint fills below repeat the same radius so no square
+      // corner can bleed past the edge (backdrop-filter layers don't always
+      // clip cleanly to a class-only radius on web). Override via `style`.
+      style={{ borderRadius: GLASS_RADIUS, overflow: 'hidden' }}
+      {...rest}>
       <BlurView
         intensity={intensity}
         tint={isDark ? 'dark' : 'light'}
-        style={StyleSheet.absoluteFill}
+        style={[StyleSheet.absoluteFill, { borderRadius: GLASS_RADIUS, overflow: 'hidden' }]}
       />
       {/* Translucent tint so content stays legible over busy backgrounds. */}
       <View
-        style={[StyleSheet.absoluteFill, { backgroundColor: isDark ? '#ffffff14' : '#ffffff40' }]}
+        style={[
+          StyleSheet.absoluteFill,
+          { borderRadius: GLASS_RADIUS, backgroundColor: isDark ? '#ffffff14' : '#ffffff40' },
+        ]}
       />
       <View className="p-5">{body}</View>
     </View>
   );
 }
+
+const GLASS_RADIUS = 24;
 
 const styles = StyleSheet.create({
   neuLight: {

@@ -1,0 +1,9 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 960, "h": 1180, "title": "Button Celebration Lab", "is_interactive": true }
+  ],
+  "annotations": [
+    { "id": "note-lab", "x": 0, "y": -130, "w": 600, "text": "Interactive exploration of button after-click celebrations.\nPick an effect and tap the hero button to replay (it also auto-demos). Below is the full menu: green = already shipping in Button (sparkles/stars/popup), violet = new ideas to add (confetti/hearts/rings). Built on your tokens — Spline Sans, #208AEF, #7c3aed." }
+  ],
+  "launch": { "view": "focused", "file": "Main.dc.html" }
+}

@@ -739,3 +739,59 @@ export function SoftAvatar(props: Omit<AvatarProps, 'variant'>) {
 export function AvatarButton(props: AvatarProps & { onPress: PressableProps['onPress'] }) {
   return <Avatar interactive animation="bounce" {...props} />;
 }
+
+// ---------------------------------------------------------------------------
+// StatusAvatar — shorthand alias over Avatar, kept in this file so there is
+// a single avatar implementation. `name` feeds the initials fallback,
+// `status` drives the presence dot (+ pulse when online).
+// ---------------------------------------------------------------------------
+
+export interface StatusAvatarProps {
+  /** Remote image URL. Falls back to initials when absent or broken. */
+  source?: string;
+  /** Used for the initials fallback. */
+  name?: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  status?: 'online' | 'away' | 'offline';
+  className?: string;
+}
+
+export function StatusAvatar({
+  source,
+  name = '',
+  size = 'md',
+  status,
+  className,
+}: StatusAvatarProps) {
+  return (
+    <Avatar
+      source={source}
+      fallback={name}
+      size={size}
+      status={status}
+      className={className}
+    />
+  );
+}
+
+export interface StatusAvatarGroupProps {
+  /** `StatusAvatar` (or `Avatar`) elements. Beyond `max`, the rest collapse into +N. */
+  children: React.ReactNode;
+  max?: number;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  className?: string;
+}
+
+export function StatusAvatarGroup({
+  children,
+  max = 4,
+  size = 'md',
+  className,
+}: StatusAvatarGroupProps) {
+  const items = Array.isArray(children) ? children : [children];
+  return (
+    <AvatarGroup max={max} size={size} className={className}>
+      {items}
+    </AvatarGroup>
+  );
+}

@@ -1,4 +1,11 @@
 // Public API for the component library.
+export {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+  type AccordionProps
+} from './accordion';
 export { Button, type ButtonProps } from './button';
 export {
   Card,
@@ -8,23 +15,15 @@ export {
   CardHeader,
   CardMedia,
   CardTitle,
-  type CardProps,
+  type CardProps
 } from './card';
-export {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-  type AccordionProps,
-} from './accordion';
-export { TextField, type TextFieldProps } from './text-field';
-export { Switch, type SwitchProps } from './switch';
 export { Checkbox, FormRow, type CheckboxProps } from './checkbox';
+export {
+  Input, type InputHandle, type InputLabelStyle, type InputProps, type InputSize, type InputVariant
+} from './input';
 export { Row, Stack } from './stack';
+export { Switch, type SwitchProps } from './switch';
 
-export { Text, type TextProps } from './text';
-export { Badge, type BadgeProps } from './badge';
-export { Avatar, AvatarGroup, type AvatarProps } from './avatar';
 export {
   Alert,
   AlertAction,
@@ -32,49 +31,77 @@ export {
   AlertDescription,
   AlertTitle,
   type AlertActionProps,
-  type AlertProps,
+  type AlertProps
 } from './alert';
-export { Separator, type SeparatorProps } from './separator';
-export { Skeleton, type SkeletonProps } from './skeleton';
-export { Spinner, type SpinnerProps } from './spinner';
-export { Progress, type ProgressProps } from './progress';
+export { Avatar, AvatarGroup, type AvatarProps } from './avatar';
+export { Badge, type BadgeProps } from './badge';
+export { Text, type TextProps } from './text';
+export {
+  ImageUploader,
+  type ImageUploaderProps,
+  type UploadFile,
+  type UploadStatus,
+} from './image-uploader';
+export {
+  DateTimePickerField,
+  type DateTimePickerFieldProps,
+  type DateTimePickerMode,
+} from './date-time-picker';
+// export { Separator, type SeparatorProps } from './separator';
+export { Progress, type ProgressProps, type ProgressSize, type ProgressVariant } from './progress';
 export { Radio, RadioGroup, type RadioGroupProps, type RadioProps } from './radio';
-export { Toggle, type ToggleProps } from './toggle';
+export { Skeleton, type SkeletonProps } from './skeleton';
+export { Spinner, type SpinnerProps, type SpinnerVariant } from './spinner';
+export { StarRating, type StarRatingProps } from './star-rating';
 export {
   Tabs,
   TabsContent,
   TabsList,
+  TabsSegmented,
+  type TabsProps,
+  type TabsSegmentedItem,
+  type TabsSegmentedProps,
   TabsTrigger,
   TabsTriggerUnderline,
-  type TabsProps,
 } from './tabs';
-
-// Premium showcase set — self-contained, animated components.
-export { GradientButton, type GradientButtonProps } from './gradient-button';
-export { GlassCard, type GlassCardProps } from './glass-card';
+export { Toggle, type ToggleProps } from './toggle';
 export {
-  FloatingLabelInput,
-  type FloatingLabelInputProps,
-  type FloatingLabelInputHandle,
-} from './floating-label-input';
-export { MorphToggle, type MorphToggleProps } from './morph-toggle';
+  ToastProvider,
+  useToast,
+  type ToastAction,
+  type ToastOptions,
+  type ToastPosition,
+  type ToastVariant,
+} from './toast';
+
+// Components showcase set — self-contained, animated components.
+export {
+  Dialog,
+  DialogFooter,
+  DialogHeader,
+  type DialogFooterProps,
+  type DialogHeaderProps,
+  type DialogProps,
+  type DialogSize,
+} from './dialog';
+export { GlassCard, type GlassCardProps } from './glass-card';
+export { SlideSheet, type SlideSheetProps } from './slide-sheet';
 export {
   StatusAvatar,
-  StatusAvatarGroup,
-  type StatusAvatarProps,
-  type StatusAvatarGroupProps,
-} from './status-avatar';
-export { PillBadge, type PillBadgeProps } from './pill-badge';
-export { ProgressIndicator, type ProgressIndicatorProps } from './progress-indicator';
-export { SlideSheet, type SlideSheetProps } from './slide-sheet';
-export { SegmentedTabs, type SegmentedTabsProps, type SegmentedTabItem } from './segmented-tabs';
+  StatusAvatarGroup, type StatusAvatarGroupProps, type StatusAvatarProps
+} from './avatar';
 
-// Theming helpers.
-export {
-  palette,
-  useThemeColors,
-  gradients,
-  type ThemeColors,
-  type GradientName,
-} from './lib/theme';
+// Theming + customization helpers.
 export { cn } from './lib/cn';
+export {
+  ACCENT_SWATCHES,
+  CustomizationProvider,
+  useAccent,
+  useCustomization,
+  type AccentSwatch
+} from './lib/customization';
+export {
+  gradients, palette,
+  useThemeColors, type GradientName, type ThemeColors
+} from './lib/theme';
+

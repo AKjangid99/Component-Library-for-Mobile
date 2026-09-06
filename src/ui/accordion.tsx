@@ -1,18 +1,32 @@
+/*
+ * Reanimated shared-value mutation (`sv.value = ...`) is the library's intended
+ * idiom, but the React-Compiler `react-hooks/immutability` rule flags it as a
+ * false positive (same as button/avatar/alert in this repo). Scoped off here.
+ */
+/* eslint-disable react-hooks/immutability */
 import { cva, type VariantProps } from 'class-variance-authority';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
+import { ChevronDown } from 'lucide-react-native';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View, type ViewProps } from 'react-native';
 import Animated, {
-  Easing,
   interpolateColor,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  withTiming,
 } from 'react-native-reanimated';
 
 import { cn } from '@/ui/lib/cn';
 import { useThemeColors } from '@/ui/lib/theme';
+
+/** Apply an alpha channel to a 6-digit hex color (`#rrggbb` → `rgba(...)`). */
+function withAlpha(hex: string, alpha: number): string {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 // ---------------------------------------------------------------------------
 // Contexts
@@ -167,6 +181,8 @@ const triggerVariants = cva('flex-row items-center gap-3', {
       ghost: 'rounded-xl active:bg-muted/60',
       filled: 'm-1.5 rounded-xl bg-primary active:opacity-90',
       subtle: 'm-1.5 rounded-xl bg-secondary active:opacity-90',
+      // Transparent when closed, fills with primary when open (animated).
+      solid: 'rounded-lg active:opacity-95',
     },
     size: {
       sm: 'min-h-11 px-3 py-2.5',
@@ -192,6 +208,15 @@ export type AccordionTriggerProps = VariantProps<typeof triggerVariants> & {
   className?: string;
   disabled?: boolean;
   chevron?: boolean;
+  /**
+   * Chevron appearance:
+   * - `plain` — bare icon, no container (rotates on open)
+   * - `circle` — soft bubble that tints on open (default)
+   * - `contrast` — solid high-contrast disc (e.g. black disc, white icon)
+   */
+  chevronVariant?: 'plain' | 'circle' | 'contrast';
+  /** Which side the chevron sits on. */
+  chevronPosition?: 'leading' | 'trailing';
 };
 
 export function AccordionTrigger({
@@ -206,6 +231,8 @@ export function AccordionTrigger({
   animation = 'scale',
   disabled,
   chevron = true,
+  chevronVariant = 'circle',
+  chevronPosition = 'trailing',
 }: AccordionTriggerProps) {
   const { isOpen, toggle } = useAccordionCtx();
   const { value } = useItemCtx();
@@ -218,10 +245,34 @@ export function AccordionTrigger({
   const pressY = useSharedValue(0);
 
   useEffect(() => {
-    progress.value = withTiming(open ? 1 : 0, { duration: 260, easing: Easing.out(Easing.cubic) });
+    // Springy open/close so the whole header feels alive, not just linear.
+    progress.value = withSpring(open ? 1 : 0, { mass: 0.5, damping: 15, stiffness: 200 });
   }, [open, progress]);
 
   const isFilled = variant === 'filled';
+  const isSolid = variant === 'solid';
+  // When solid, the whole header fills with primary on open; text/icons flip white.
+  const solidActive = isSolid && open;
+  // Precomputed off the UI thread — worklets can't run the hex parser.
+  const openTint = isFilled
+    ? 'rgba(0,0,0,0)'
+    : isSolid
+      ? colors.primary
+      : withAlpha(colors.primary, 0.08);
+
+  // A soft primary wash across the header while open — invites the tap and
+  // makes the active row unmistakable. Skipped for the filled variant, which
+  // already carries a strong background.
+  const openTintStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(progress.value, [0, 1], ['rgba(0,0,0,0)', openTint] as never),
+  }));
+
+  // Growing accent bar on the leading edge — a quiet "you are here" marker.
+  const accentBarStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    transform: [{ scaleY: 0.2 + progress.value * 0.8 }],
+    backgroundColor: isFilled ? '#fff' : colors.primary,
+  }));
 
   const chevronContainerStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(
@@ -229,10 +280,10 @@ export function AccordionTrigger({
       [0, 1],
       [
         isFilled ? 'rgba(255,255,255,0.18)' : colors.muted,
-        isFilled ? 'rgba(255,255,255,0.95)' : colors.foreground,
+        isFilled ? 'rgba(255,255,255,0.95)' : colors.primary,
       ] as never,
     ),
-    transform: [{ scale: 0.96 + progress.value * 0.04 }],
+    transform: [{ scale: 0.94 + progress.value * 0.06 }],
   }));
 
   const chevronIconStyle = useAnimatedStyle(() => ({
@@ -245,15 +296,47 @@ export function AccordionTrigger({
       [0, 1],
       [iconBg ?? (isFilled ? 'rgba(255,255,255,0.22)' : colors.secondary), colors.primary] as never,
     ),
-    transform: [{ scale: 1 + progress.value * 0.06 }],
+    transform: [
+      { scale: 1 + progress.value * 0.08 },
+      { rotate: `${progress.value * -4}deg` },
+    ],
   }));
 
   const pressStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pressScale.value }, { translateY: pressY.value }],
   }));
 
-  const titleColor = isFilled ? colors.primaryForeground : colors.cardForeground;
-  const descColor = isFilled ? 'rgba(255,255,255,0.78)' : colors.mutedForeground;
+  // Chevron: rotates 180° on open (down → up). Three appearances.
+  const chevronPlainColor = isFilled || solidActive ? '#fff' : open ? colors.primary : colors.mutedForeground;
+  const chevronNode = !chevron ? null : chevronVariant === 'plain' ? (
+    <Animated.View style={chevronIconStyle}>
+      <ChevronDown size={16} color={chevronPlainColor} strokeWidth={2.5} />
+    </Animated.View>
+  ) : chevronVariant === 'contrast' ? (
+    <View
+      className="h-7 w-7 items-center justify-center rounded-full"
+      style={{ backgroundColor: solidActive ? '#fff' : colors.foreground }}>
+      <Animated.View style={chevronIconStyle}>
+        <ChevronDown size={15} color={solidActive ? colors.primary : colors.background} strokeWidth={2.5} />
+      </Animated.View>
+    </View>
+  ) : (
+    <Animated.View
+      style={chevronContainerStyle}
+      className="h-7 w-7 items-center justify-center rounded-full">
+      <Animated.View style={chevronIconStyle}>
+        <ChevronDown
+          size={15}
+          color={open ? (isFilled ? colors.primary : colors.primaryForeground) : isFilled ? '#fff' : colors.mutedForeground}
+          strokeWidth={2.5}
+        />
+      </Animated.View>
+    </Animated.View>
+  );
+
+  const titleColor = isFilled || solidActive ? colors.primaryForeground : colors.cardForeground;
+  const descColor =
+    isFilled || solidActive ? 'rgba(255,255,255,0.78)' : colors.mutedForeground;
 
   const handlePressIn = () => {
     if (disabled) return;
@@ -289,8 +372,21 @@ export function AccordionTrigger({
       onPress={() => toggle(value)}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      className={cn(triggerVariants({ variant, size }), disabled && 'opacity-50', className)}>
+      className={cn(triggerVariants({ variant, size }), 'overflow-hidden', disabled && 'opacity-50', className)}>
+      {/* Open-state wash behind the content */}
+      <Animated.View pointerEvents="none" style={openTintStyle} className="absolute inset-0" />
+      {/* Leading accent bar — skipped for solid (the whole header fills instead) */}
+      {isSolid ? null : (
+        <Animated.View
+          pointerEvents="none"
+          style={accentBarStyle}
+          className="absolute bottom-2 left-0 top-2 w-1 rounded-r-full"
+        />
+      )}
       <Animated.View style={pressStyle} className="flex-1 flex-row items-center gap-3">
+        {/* Leading chevron */}
+        {chevronPosition === 'leading' ? chevronNode : null}
+
         {/* Leading icon bubble */}
         {icon ? (
           <Animated.View
@@ -334,20 +430,8 @@ export function AccordionTrigger({
           </View>
         ) : null}
 
-        {/* Chevron */}
-        {chevron ? (
-          <Animated.View
-            style={chevronContainerStyle}
-            className="h-7 w-7 items-center justify-center rounded-full">
-            <Animated.View style={chevronIconStyle}>
-              <SymbolView
-                name="chevron.down"
-                size={13}
-                tintColor={open ? (isFilled ? colors.primary : colors.background) : isFilled ? '#fff' : colors.mutedForeground}
-              />
-            </Animated.View>
-          </Animated.View>
-        ) : null}
+        {/* Trailing chevron */}
+        {chevronPosition === 'trailing' ? chevronNode : null}
       </Animated.View>
     </Pressable>
   );
